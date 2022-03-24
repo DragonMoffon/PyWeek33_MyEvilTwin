@@ -57,14 +57,15 @@ class GpuGlow:
             self.texture_2.use(0)
             Constants.BASIC_GEO.render(self.blur_prog)
 
-        self.framebuffer_2.use()
-
-        # Re-render the original texture over the top. This helps sell the glow.
-        input_texture.use(0)
-        Constants.BASIC_GEO.render(Constants.TEXTURE_PROG)
+        # # Re-render the original texture over the top. This helps sell the glow.
+        # input_texture.use(0)
+        # Constants.BASIC_GEO.render(Constants.TEXTURE_PROG)
 
         # Write over the input texture with the newly create texture.
         input_texture.write(self.texture_2.read())
+
+        self.framebuffer_1.clear()
+        self.framebuffer_2.clear()
 
         # finally, return the rendering back to the main window
         self.window.use()

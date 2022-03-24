@@ -10,8 +10,9 @@ uniform sampler2D tex;
 void main() {
     fragColor = texture(tex, uv, 0);
 
-    float brightness = dot(fragColor.rgb, vec3(1, 1, 1));
-    if (brightness > 1.0){
+    // float brightness = dot(fragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    float brightness = dot(fragColor.rgb, vec3(1));
+    if (brightness > 0.0){
         brightColor = vec4(fragColor.rgb, 1.0);
     }
     else{
