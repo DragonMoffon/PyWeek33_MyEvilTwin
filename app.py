@@ -1,11 +1,10 @@
-
 import arcade
 import pyglet.gl as gl
-import random
 
-from constants import init_constants, Constants
-from modulation_graphic import EnemyRenderer
+from constants import init_constants, Constants, TIMER
 from effects.gaussian_blur import GpuGlow
+from modulation import ModulationHandler
+from menu import MenuManager
 
 
 class GameApp(arcade.Window):
@@ -25,8 +24,15 @@ class GameApp(arcade.Window):
         self.final_prog['exposure'] = 2.0
         self.bloom = GpuGlow(self, self.get_size())
 
+        self.modulation_handler = ModulationHandler(self)
+        self.menu_manager = MenuManager(self)
+
     def on_update(self, delta_time: float):
-        pass
+        TIMER.update_time(delta_time)
+        self.menu_manager.on_update()
+
+    def default_update(self):
+        self.modulation_handler.on_update()
 
     def on_draw(self):
         self.game_framebuffer.use()
@@ -34,8 +40,17 @@ class GameApp(arcade.Window):
 
         gl.glColorMaski(1, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE)
         self.game_screen.draw(pixelated=True)
+
+        self.menu_manager.on_draw()
+
+        self.modulation_handler.on_draw()
         gl.glColorMaski(1, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
 
+        if self.bloom.blur_count or TIMER.local_time % 0.5 > 0.25:
+
+            self.menu_manager.on_glow_draw()
+
+        self.modulation_handler.on_glow_draw()
 
         self.use()
         self.clear()
@@ -45,16 +60,20 @@ class GameApp(arcade.Window):
         self.base_texture.use(0)
         self.hdr_texture.use(1)
 
-        # just render the texture to the screen using a screen sized geometry
-        # Constants.BASIC_GEO.render(Constants.TEXTURE_PROG)
-
+        # render the hdr textures to the screen using a screen sized geometry
         Constants.BASIC_GEO.render(self.final_prog)
 
     def on_key_press(self, symbol: int, modifiers: int):
-        if symbol == arcade.key.SPACE:
-            self.modulate = bool(1-self.modulate)
+        if TIMER.run:
+            self.modulation_handler.on_key_press(symbol)
+        self.menu_manager.on_key_press(symbol)
+
+    def on_key_release(self, symbol: int, modifiers: int):
+        if TIMER.run:
+            self.modulation_handler.on_key_release(symbol)
 
 
 def run():
+    TIMER.begin()
     window = GameApp()
     window.run()
