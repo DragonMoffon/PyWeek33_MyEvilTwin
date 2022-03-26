@@ -8,16 +8,19 @@ import arcade.gl as gl
 class Constants:
 
     SCREEN_SIZE: tuple[int, int] = (976, 480)
-    OSCILLOSCOPE_SIZE: tuple[int, int] = (550, 300)
+    OSCILLOSCOPE_SIZE: tuple[int, int] = (549, 299)
     OSCILLOSCOPE_POS: tuple[int, int] = (282, 252)
     FREQUENCIES: tuple[float, float, float, float, float] = (0.5, 1.0, 1.5, 2.0, 3.0)
     BASIC_GEO: gl.Geometry
     TEXTURE_PROG: gl.Program
 
     TWIN_COLOR: tuple[float, float, float] = [1.0, 0.0, 0.0]
-    PLAYER_COLOR: tuple[float, float, float] = [0.0, 1.0, 0.0]
+    PLAYER_COLOR: tuple[float, float, float] = [0.2, 1.0, 0.0]
 
     WAVE_SPEED: float = 1/3
+
+    EFFECTS = True
+    SCREEN_GLOW = False
 
 
 CONSTANTS = Constants()

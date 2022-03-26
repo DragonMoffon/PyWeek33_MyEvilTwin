@@ -3,6 +3,7 @@ import random
 
 import arcade
 
+from modulation_graphic import ModulationRenderer
 from constants import Constants, TIMER
 
 
@@ -53,6 +54,12 @@ class ModulationHandler:
 
         self.frequency_knob.angle = FREQUENCY_KNOB_ANGLES[self.frequency]
 
+        self.wave_peak = 0
+
+        # --- GRAPHICAL ---
+
+        self.renderer = ModulationRenderer(self.window)
+
     def on_key_press(self, symbol):
         if symbol == arcade.key.LEFT:
             self.frequency = max(self.frequency - 1, 0)
@@ -86,6 +93,8 @@ class ModulationHandler:
     def on_glow_draw(self):
         if self.window.bloom.blur_count or TIMER.local_time % 0.5 > 0.25:
             self.glow_graphics.draw()
+
+        self.renderer.draw()
 
         for index, wave in enumerate(self.twin_waves):
             freq = Constants.FREQUENCIES[wave[1]]
@@ -122,13 +131,14 @@ class ModulationHandler:
             self.twin_waves.append((random.randint(-1, 1), 2, 0, 0))
 
         if 0 <= self.wave_shift <= 5/6:
-            t_peak = self.twin_waves[1][0]
-            t_frequency = Constants.FREQUENCIES[self.twin_waves[1][1]]
-            t_x = (self.wave_shift + (1/6))*3
+            twin_wave = 1
+            t_x = (self.wave_shift + (1 / 6)) * 3
         else:
-            t_peak = self.twin_waves[2][0]
-            t_frequency = Constants.FREQUENCIES[self.twin_waves[2][1]]
-            t_x = (self.wave_shift - (5 / 6))*3
+            twin_wave = 2
+            t_x = (self.wave_shift - (5 / 6)) * 3
+
+        t_peak = self.twin_waves[twin_wave][0]
+        t_frequency = Constants.FREQUENCIES[self.twin_waves[twin_wave][1]]
 
         p_peak = 0
         p_frequency = Constants.FREQUENCIES[0]
@@ -147,9 +157,13 @@ class ModulationHandler:
         player_height = equation(p_x, p_peak, p_frequency)
 
         total_height = twin_height + player_height
+        if abs(total_height) > self.wave_peak and abs(twin_height) > 0:
+            self.wave_peak = abs(total_height)
 
-        if abs(total_height) >= 0.2:
-            print("FAILED TO INTERCEPT!!!!!")
+        if t_x > t_frequency:
+            if self.wave_peak > 0.2:
+                self.window.menu_manager.health_manager.damage()
+            self.wave_peak = 0
 
         for wave in self.player_waves[::-1]:
             if TIMER.local_time_since(wave[-1]) > (8+Constants.FREQUENCIES[wave[1]])/3/Constants.WAVE_SPEED:
@@ -157,3 +171,6 @@ class ModulationHandler:
                 self.player_waves.append((0, 0, 0))
             else:
                 break
+
+        self.renderer.render(self.twin_waves, self.player_waves, (self.peak, Constants.FREQUENCIES[self.frequency]),
+                             self.wave_shift)

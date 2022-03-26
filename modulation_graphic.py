@@ -3,63 +3,41 @@ import random
 import arcade
 import arcade.gl.geometry as geo
 
-from constants import Constants
+from constants import Constants, TIMER
 
 
-RANGE = (0.25, 0.5, 1.0, 1.5, 3.0)
-RANGE_COUNT = {0.25: (1, 4), 0.5: (1, 4), 1: (1, 2), 1.5: (1, 2), 3: (1, 1)}
+class ModulationRenderer:
 
-
-class EnemyRenderer:
-
-    def __init__(self, window: arcade.Window, color: tuple[float, float, float],
-                 frame_width: int, frame_height: int, v_scale: float, render_pos: tuple[int, int]):
-        self.frame_size = (frame_width, frame_height)
-        self.vertical_scale = v_scale  # The max percent of frame size / 2 which the wave may reach
-
+    def __init__(self, window: arcade.Window,):
         self.window = window
+        self.size = Constants.OSCILLOSCOPE_SIZE
+        self.pos = Constants.OSCILLOSCOPE_POS
 
-        self.modulation_texture = window.ctx.texture(self.frame_size, dtype='f2')
+        self.modulation_texture = window.ctx.texture(Constants.OSCILLOSCOPE_SIZE, dtype='f2')
         self.framebuffer = window.ctx.framebuffer(color_attachments=self.modulation_texture)
 
         self.modulation_program = window.ctx.load_program(vertex_shader=":resource:/shaders/base_vert.glsl",
                                                           fragment_shader=":resource:/shaders/modulation_frag.glsl")
 
-        self.waves: list[tuple[float, float, float, float]] = [(0, 1, 0, 0) for _ in range(4)]+[(1, 1, 0, 0)]
-        self.modulation_program['enemy_waves'] = [n for x in self.waves for n in x]
-        self.modulation_program['wave_max'] = int(frame_height // 2 * v_scale), frame_height // 2
-        self.modulation_program['color'] = color
-        self.modulation_program['player_wave'] = (-1, 3, 0, 0)
-        self.shift = 0.0
-
         self.draw_prog = window.ctx.load_program(vertex_shader=":resource:/shaders/texture_vert.glsl",
                                                  fragment_shader=":resource:/shaders/texture_draw_HDR_frag.glsl")
-        self.draw_area = geo.quad_2d((2 * frame_width / Constants.SCREEN_SIZE[0],
-                                      2 * frame_height / Constants.SCREEN_SIZE[1]),
-                                     ((2*render_pos[0])/Constants.SCREEN_SIZE[0]-1,
-                                      (2*render_pos[1])/Constants.SCREEN_SIZE[1]-1))
 
-    def on_update(self, delta_time):
-        self.shift = (self.shift+delta_time/2)
-        if self.shift > 1:
-            self.shift -= 1
-            self.waves.pop(0)
-            freq = RANGE[-1]  # random.choice(RANGE)
-            duration = random.randint(*RANGE_COUNT[freq])
-            min_x = freq * (duration-1)/2 if duration % 2 == 1 else freq * duration/2
-            max_x = freq * (duration-1)/2 if duration % 2 == 1 else freq * (duration-2)/2
-            shift = random.uniform(-(1.5-freq/2-min_x), 3-(1.5+freq/2+max_x))
-            new_wave = (random.randint(-1, 1), freq, duration, shift)
-            self.waves.append(new_wave)
-            self.modulation_program['enemy_waves'] = [n for x in self.waves for n in x]
+        self.draw_area = geo.quad_2d((2 * self.size[0] / Constants.SCREEN_SIZE[0],
+                                      2 * self.size[1] / Constants.SCREEN_SIZE[1]),
+                                     (2 * self.pos[0] / Constants.SCREEN_SIZE[0]-1,
+                                      2 * self.pos[1] / Constants.SCREEN_SIZE[1]-1))
 
-        self.modulation_program['shift'] = self.shift
+    def render(self, twin_waves, player_waves, player_wave, shift):
 
-    def adjust_wave_data(self, new_data):
-        self.waves = new_data
-        self.modulation_program['wave_data'] = new_data
+        self.modulation_program['color'] = Constants.PLAYER_COLOR
+        self.modulation_program['l_time'] = TIMER.local_time
 
-    def render(self):
+        self.modulation_program['twin_waves'] = [n for wave in twin_waves for n in wave]
+        self.modulation_program['player_waves'] = [n for wave in player_waves for n in wave]
+        self.modulation_program['player_wave'] = player_wave
+
+        self.modulation_program['shift'] = shift
+
         self.framebuffer.use()
         self.framebuffer.clear()
         Constants.BASIC_GEO.render(self.modulation_program)

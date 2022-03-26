@@ -1,3 +1,5 @@
+from math import cos, pi
+
 import arcade
 import pyglet.gl as gl
 
@@ -22,23 +24,50 @@ class GameApp(arcade.Window):
         self.final_prog['scene'] = 0
         self.final_prog['bloomBlur'] = 1
         self.final_prog['exposure'] = 2.0
+
+        self.vignettes = arcade.SpriteList()
         self.bloom = GpuGlow(self, self.get_size())
 
         self.modulation_handler = ModulationHandler(self)
         self.menu_manager = MenuManager(self)
 
+        self.fade = -1
+        self.pulse = -1
+        self.dead = False
+
     def on_update(self, delta_time: float):
         TIMER.update_time(delta_time)
+        if self.fade >= 0 and TIMER.global_time_since(self.fade) > 1:
+            self.final_prog['exposure'] = 0
+            self.fade = -1
+            TIMER.pause()
         self.menu_manager.on_update()
 
     def default_update(self):
         self.modulation_handler.on_update()
 
+    def die(self):
+        if not self.dead:
+            self.fade = TIMER.global_time
+            self.dead = True
+
+    def damaged(self):
+        self.pulse = TIMER.global_time
+        Constants.SCREEN_GLOW = True
+
     def on_draw(self):
         self.game_framebuffer.use()
         self.game_framebuffer.clear((0.0, 0.0, 0.0, 0.0))
 
-        gl.glColorMaski(1, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE, gl.GL_FALSE)
+        gl.glColorMaski(1, Constants.SCREEN_GLOW, Constants.SCREEN_GLOW, Constants.SCREEN_GLOW, Constants.SCREEN_GLOW)
+        if self.pulse >= 0:
+            self.final_prog['exposure'] = -cos(6*pi*TIMER.global_time_since(self.pulse))+3
+            if TIMER.global_time_since(self.pulse) > 1/3:
+                self.final_prog['exposure'] = 2.0
+                self.pulse = -1
+                if self.menu_manager.health_manager.health_range > 0:
+                    Constants.SCREEN_GLOW = False
+
         self.game_screen.draw(pixelated=True)
 
         self.menu_manager.on_draw()
@@ -46,9 +75,7 @@ class GameApp(arcade.Window):
         self.modulation_handler.on_draw()
         gl.glColorMaski(1, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE, gl.GL_TRUE)
 
-        if self.bloom.blur_count or TIMER.local_time % 0.5 > 0.25:
-
-            self.menu_manager.on_glow_draw()
+        self.menu_manager.on_glow_draw()
 
         self.modulation_handler.on_glow_draw()
 
@@ -60,8 +87,16 @@ class GameApp(arcade.Window):
         self.base_texture.use(0)
         self.hdr_texture.use(1)
 
+        if self.fade >= 0:
+            time_since = TIMER.global_time_since(self.fade)
+            if time_since <= 1:
+                self.final_prog['exposure'] = 2 - (time_since*2)
+
         # render the hdr textures to the screen using a screen sized geometry
         Constants.BASIC_GEO.render(self.final_prog)
+
+        if Constants.EFFECTS:
+            self.vignettes.draw(pixelated=True)
 
     def on_key_press(self, symbol: int, modifiers: int):
         if TIMER.run:

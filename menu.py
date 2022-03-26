@@ -1,3 +1,5 @@
+from math import ceil
+
 import arcade
 
 from constants import Constants, SOUNDS, TIMER
@@ -54,10 +56,12 @@ class MorseKnob(SettingManager):
     def key_up(self):
         self.index = 2
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
+        self.can_switch = False
 
     def key_down(self):
         self.index = 3
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
+        self.can_switch = True
 
 
 class PowerSwitch(SettingManager):
@@ -95,7 +99,6 @@ class SpeedKnob(SettingManager):
 
 
 class ChancesKnob(SettingManager):
-    CHANCE_VALUES = (1, 3, 6, 9)
 
     def __init__(self, window, neighbors, knob, case, manager):
         super().__init__(window, neighbors, knob, case, manager)
@@ -105,10 +108,12 @@ class ChancesKnob(SettingManager):
     def key_up(self):
         self.index = min(self.index + 1, 3)
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
+        self.manager.health_manager.change(self.index)
 
     def key_down(self):
         self.index = max(self.index - 1, 0)
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
+        self.manager.health_manager.change(self.index)
 
 
 class SoundKnob(SettingManager):
@@ -153,9 +158,11 @@ class EffectSwitch(SettingManager):
 
     def key_up(self):
         self.knob.texture = SettingManager.SWITCH_TEXTURE[0]
+        Constants.EFFECTS = True
 
     def key_down(self):
         self.knob.texture = SettingManager.SWITCH_TEXTURE[1]
+        Constants.EFFECTS = False
 
 
 class ColorKnob(SettingManager):
@@ -168,11 +175,119 @@ class ColorKnob(SettingManager):
         self.index = 1
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
         Constants.PLAYER_COLOR = [0.0, 1.0, 0.0]
+        self.manager.health_manager.switch_colors(0)
 
     def key_down(self):
         self.index = 0
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
         Constants.PLAYER_COLOR = [0.0, 0.2, 1.0]
+        self.manager.health_manager.switch_colors(1)
+
+
+class HealthLights:
+    HEALTH_ARRAY = (1, 3, 6, 9)
+
+    LIGHT_TEXTURES = ()
+
+    def __init__(self, window):
+        self.window = window
+        self.current_chances = HealthLights.HEALTH_ARRAY[1]
+        self.chance_range = 1
+        self.chances = list(HealthLights.HEALTH_ARRAY)
+
+        self.light_1 = arcade.Sprite(":resource:/graphics/Damage_Light_Green_48px.png", scale=0.25,
+                                     center_x=944, center_y=352)
+        self.light_2 = arcade.Sprite(":resource:/graphics/Damage_Light_Orange_48px.png", scale=0.25,
+                                     center_x=944, center_y=302)
+        self.light_3 = arcade.Sprite(":resource:/graphics/Damage_Light_Red_48px.png", scale=0.25,
+                                     center_x=944, center_y=252)
+        self.lights = arcade.SpriteList()
+        self.current_light = self.light_1
+        self.lights.extend([self.light_1, self.light_2, self.light_3])
+
+        case_1 = arcade.Sprite(":resource:/graphics/Damage_Case_48px.png", scale=0.25,
+                               center_x=944, center_y=352)
+        case_2 = arcade.Sprite(":resource:/graphics/Damage_Case_48px.png", scale=0.25,
+                               center_x=944, center_y=302)
+        case_3 = arcade.Sprite(":resource:/graphics/Damage_Case_48px.png", scale=0.25,
+                               center_x=944, center_y=252)
+
+        self.cases = arcade.SpriteList()
+        self.cases.extend([case_1, case_2, case_3])
+
+        self.health_range = 3
+
+        self.vignette = 0
+
+    def change(self, new_index):
+        last_percent = self.current_chances / HealthLights.HEALTH_ARRAY[self.chance_range]
+        new_percent = self.chances[new_index] / HealthLights.HEALTH_ARRAY[new_index]
+
+        self.chance_range = new_index
+
+        if ceil(last_percent*HealthLights.HEALTH_ARRAY[new_index]) < self.chances[new_index]:
+            self.current_chances = ceil(last_percent*HealthLights.HEALTH_ARRAY[new_index])
+            self.chances[new_index] = self.current_chances
+        else:
+            self.current_chances = self.chances[new_index]
+
+        if self.chance_range == 0:
+            self.light_1.texture = HealthLights.LIGHT_TEXTURES[-1]
+            self.light_2.texture = HealthLights.LIGHT_TEXTURES[-1]
+            self.light_3.texture = HealthLights.LIGHT_TEXTURES[-1]
+        else:
+            self.switch_colors(int(Constants.PLAYER_COLOR[-1]))
+
+        self.correct_lights()
+
+    def damage(self):
+        self.current_chances -= 1
+        self.chances[self.chance_range] -= 1
+
+        if self.current_chances < 0:
+            self.window.die()
+        else:
+            self.window.damaged()
+
+        self.correct_lights()
+
+    def correct_lights(self):
+        self.health_range = 3 * self.current_chances / HealthLights.HEALTH_ARRAY[self.chance_range]
+
+        Constants.SCREEN_GLOW = False
+        if self.health_range > 2:
+            self.current_light = self.light_1
+        elif self.health_range > 1:
+            self.light_1.alpha = 40
+            self.current_light = self.light_2
+        elif self.health_range:
+            self.light_1.alpha = 40
+            self.light_2.alpha = 40
+            self.current_light = self.light_3
+            if not len(self.window.vignettes):
+                self.window.vignettes.append(arcade.Sprite(":resource:/graphics/Danger_Effect.png", scale=0.25,
+                                                           center_x=Constants.SCREEN_SIZE[0]//2,
+                                                           center_y=Constants.SCREEN_SIZE[1]//2))
+        else:
+            self.light_1.alpha = 40
+            self.light_2.alpha = 40
+            self.light_3.alpha = 40
+            Constants.SCREEN_GLOW = True
+            self.current_light = self.light_3
+
+    def on_draw(self):
+        self.cases.draw(pixelated=True)
+
+    def on_glow_draw(self):
+        self.lights.draw(pixelated=True)
+
+    def switch_colors(self, mode):
+        if mode:
+            self.light_1.texture = HealthLights.LIGHT_TEXTURES[2]
+            self.light_2.texture = HealthLights.LIGHT_TEXTURES[3]
+        else:
+            self.light_1.texture = HealthLights.LIGHT_TEXTURES[0]
+            self.light_2.texture = HealthLights.LIGHT_TEXTURES[1]
 
 
 class MenuManager:
@@ -183,6 +298,13 @@ class MenuManager:
 
         SettingManager.SWITCH_TEXTURE = (arcade.load_texture(":resource:/graphics/Switch_On_45x52px.png"),
                                          arcade.load_texture(":resource:/graphics/Switch_Off_45x52px.png"))
+
+        HealthLights.LIGHT_TEXTURES = (
+                        arcade.load_texture(":resource:/graphics/Damage_Light_Green_48px.png"),
+                        arcade.load_texture(":resource:/graphics/Damage_Light_Orange_48px.png"),
+                        arcade.load_texture(":resource:/graphics/Damage_Light_Blue_48px.png"),
+                        arcade.load_texture(":resource:/graphics/Damage_Light_Purple_48px.png"),
+                        arcade.load_texture(":resource:/graphics/Damage_Light_Red_48px.png"))
 
         # MORSE KNOB
         sprite = arcade.Sprite(":resource:/graphics/Knob_32px.png", scale=0.25,
@@ -259,6 +381,8 @@ class MenuManager:
         self.current = self.power_switch
         self.menu_buttons.remove(self.current.case)
 
+        self.health_manager = HealthLights(window)
+
     def on_update(self):
         self.current.on_update()
 
@@ -272,7 +396,10 @@ class MenuManager:
 
     def on_draw(self):
         self.menu_buttons.draw(pixelated=True)
+        self.health_manager.on_draw()
         self.current.on_draw()
 
     def on_glow_draw(self):
-        self.current.on_glow_draw()
+        self.health_manager.on_glow_draw()
+        if self.glow_knob.index or TIMER.global_time % 0.5 > 0.25:
+            self.current.on_glow_draw()
