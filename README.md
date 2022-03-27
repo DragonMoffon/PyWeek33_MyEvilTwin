@@ -6,16 +6,19 @@ If you don't you will take damage as the enemy successfully attacks. Survive 3 r
 and you will be able to send the signal to attack back.
 
 ##settings
-To change settings use [A] and [D] to select different options,
-and use [W] and [S] to change the settings value.
+To change settings use `[A]` and `[D]` to select different options,
+and use `[W]` and `[S]` to change the settings value.
+
+IF YOU DON'T SEE ANY SETTINGS KEY HIGHLIGHTED WHEN THE GAME LAUNCHES PRESS `[D]` FOUR TIMES. THEN `[S]` THREE TIMES TO
+ENABLE BLINKING. (thanks Cosmologicon `:)` )
 
 ##controls
 
-To play the game use the [<] and [>] keys to change the frequency of your signal.
+To play the game use the `[<]` and `[>]` keys to change the frequency of your signal.
 Try match the enemy's frequency. 
-Use [^] and [v] to change the peak of your signal. Try to oppose the enemies peak.
+Use `[^]` and `[v]` to change the peak of your signal. Try to oppose the enemies peak.
 
-press [SPACE] to send out a signal. You will hear a ping when it is best to send out your signal.
+press `[SPACE]` to send out a signal. You will hear a ping when it is best to send out your signal.
 
 You are trying to cancel out the enemy's signal at the dashed line.
 So when the enemy Signal reaches the thick line is when it is best to send out your signal.
@@ -30,7 +33,7 @@ settings knob which says 'translate' and 'off'. When you select translate the ga
 Simply run main.py.
 
 The game begins paused. 
-I recommend using the [WASD] keys to change settings to your liking first.
+I recommend using the `[WASD]` keys to change settings to your liking first.
 
 THE GAME IS VERY DIFFICULT. USE THE SPEED KNOB TO SLOW IT DOWN IF IT IS TOO HARD. MAY CAUSE A FEW AUDIO BUGS
 
