@@ -29,6 +29,15 @@ settings knob which says 'translate' and 'off'. When you select translate the ga
 ##running the game
 Simply run main.py.
 
+The game begins paused. 
+I recommend using the [WASD] keys to change settings to your liking first.
+
+THE GAME IS VERY DIFFICULT. USE THE SPEED KNOB TO SLOW IT DOWN IF IT IS TOO HARD. MAY CAUSE A FEW AUDIO BUGS
+
+When you die you must relaunch the game. It is purposely like that.
+
+When you win the screen ill go white and will say fin.
+
 ##contributions
 All assets where created by me (DragonMoffon).
 All code was written by me (DragonMoffon)

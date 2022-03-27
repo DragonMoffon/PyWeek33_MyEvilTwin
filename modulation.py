@@ -65,8 +65,8 @@ class ModulationHandler:
 
         self.sad_counter = 0
         self.level = 0
-        self.next_level = 4
-        self.start_time = TIMER.local_time
+        self.next_level = 1
+        self.start_time = 0
 
         # --- GRAPHICAL ---
 

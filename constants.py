@@ -32,7 +32,7 @@ class Timer:
 
     def __init__(self):
         self.global_time = 0
-        self.local_time = 360
+        self.local_time = 0
         self.time_step = 1
         self.delta_time = 0
         self.delta_local_time = 0
@@ -40,7 +40,7 @@ class Timer:
 
     def begin(self):
         self.global_time = 0
-        self.local_time = 360
+        self.local_time = 0
 
     def update_time(self, delta_time):
         self.delta_time = delta_time
