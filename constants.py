@@ -37,12 +37,14 @@ class Timer:
         self.delta_time = 0
         self.delta_local_time = 0
         self.run = True
+        self.process = True
 
     def begin(self):
         self.global_time = 0
         self.local_time = 0
 
     def update_time(self, delta_time):
+        delta_time *= self.process
         self.delta_time = delta_time
         self.global_time += self.delta_time
         self.delta_local_time = delta_time*self.time_step*self.run
@@ -59,6 +61,9 @@ class Timer:
 
     def un_pause(self):
         self.run = True
+
+    def stop(self):
+        self.process = True
 
     def local_time_since(self, start_time):
         return self.local_time - start_time

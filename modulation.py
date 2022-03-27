@@ -9,8 +9,8 @@ from constants import Constants, TIMER, SOUNDS
 
 FREQUENCY_KNOB_ANGLES = [135, 90, 45, 0, -45]
 
-LEVEL_RAND = [([0], [0]), ([1], (-1, 0, 1)), ((1, 3, 4), (-1, 1, 1)),
-              ((0, 1, 2, 3, 4), (-1, 1)), ((0, 1, 2, 3, 4), (-1, 1))]
+LEVEL_RAND = [([0], [0]), ([1], (-1, 0, 1)), ((1, 3, 4), (-1, 0, 0, 1)),
+              ((0, 1, 2, 3, 4), (-1, 0, 1)), ((0, 1, 2, 3, 4), (-1, 1))]
 
 LEVEL_DURATIONS = [10.0, 60.0, 90.0, 180.0, float('inf')]
 
@@ -66,7 +66,7 @@ class ModulationHandler:
         self.sad_counter = 0
         self.level = 0
         self.next_level = 1
-        self.start_time = 0
+        self.start_time = TIMER.local_time
 
         # --- GRAPHICAL ---
 

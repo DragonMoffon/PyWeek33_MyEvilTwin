@@ -34,10 +34,6 @@ I recommend using the [WASD] keys to change settings to your liking first.
 
 THE GAME IS VERY DIFFICULT. USE THE SPEED KNOB TO SLOW IT DOWN IF IT IS TOO HARD. MAY CAUSE A FEW AUDIO BUGS
 
-When you die you must relaunch the game. It is purposely like that.
-
-When you win the screen ill go white and will say fin.
-
 ##contributions
 All assets where created by me (DragonMoffon).
 All code was written by me (DragonMoffon)
@@ -47,4 +43,4 @@ I used the arcade library.
 feel free to use any of the code. It sucks anyway, so I don't know why you would.
 
 ##notes*
-Not everything is as it seems. Pay attention to the morse code.
+Not everything is as it seems. Pay attention to the morse code. It is where the story of the twins appears.
