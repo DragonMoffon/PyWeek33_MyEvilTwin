@@ -10,6 +10,8 @@ class Constants:
     SCREEN_SIZE: tuple[int, int] = (976, 480)
     OSCILLOSCOPE_SIZE: tuple[int, int] = (549, 299)
     OSCILLOSCOPE_POS: tuple[int, int] = (282, 252)
+    MORSE_SIZE: tuple[int, int] = (549, 71)
+    MORSE_POS: tuple[int, int] = (282, 438)
     FREQUENCIES: tuple[float, float, float, float, float] = (0.5, 1.0, 1.5, 2.0, 3.0)
     BASIC_GEO: gl.Geometry
     TEXTURE_PROG: gl.Program
@@ -26,21 +28,11 @@ class Constants:
 CONSTANTS = Constants()
 
 
-def init_constants(ctx: arcade.ArcadeContext):
-    """
-    Since some constants require the arcade context they must be created after initialisation.
-    """
-
-    Constants.BASIC_GEO = geo.quad_2d_fs()
-    Constants.TEXTURE_PROG = ctx.load_program(vertex_shader=":resource:/shaders/texture_vert.glsl",
-                                              fragment_shader=":resource:/shaders/texture_frag.glsl")
-
-
 class Timer:
 
     def __init__(self):
         self.global_time = 0
-        self.local_time = 0
+        self.local_time = 360
         self.time_step = 1
         self.delta_time = 0
         self.delta_local_time = 0
@@ -48,7 +40,7 @@ class Timer:
 
     def begin(self):
         self.global_time = 0
-        self.local_time = 0
+        self.local_time = 360
 
     def update_time(self, delta_time):
         self.delta_time = delta_time
@@ -79,13 +71,50 @@ TIMER = Timer()
 
 
 class SoundPlayer:
+    SOUNDS: dict[arcade.Sound] = {
+        "hurt": None,
+        "morse": None,
+        "wave_down": None,
+        "wave_up": None,
+        "suggest": None,
+        "pulse": None,
+        "invalid": None,
+        'level4': None,
+        'level4_warn': None
+    }
 
     def __init__(self):
         self.volume = 1.0
 
+    def setup(self):
+        for wave in SoundPlayer.SOUNDS:
+            SoundPlayer.SOUNDS[wave] = arcade.load_sound(f":resource:/sounds/{wave}.wav", streaming=False)
+
     def change(self, volume):
         self.volume = min(max(0.0, volume), 1.0)
 
+    def play_sound(self, name):
+        sound: arcade.Sound = SOUNDS.SOUNDS.get(name)
+        if sound is not None:
+            return sound.play(self.volume)
+        return None
+
+    def stop_sound(self, name, player):
+        if player is not None:
+            SoundPlayer.SOUNDS[name].stop(player)
+        return None
+
 
 SOUNDS = SoundPlayer()
+
+
+def init_constants(ctx: arcade.ArcadeContext):
+    """
+    Since some constants require the arcade context they must be created after initialisation.
+    """
+
+    Constants.BASIC_GEO = geo.quad_2d_fs()
+    Constants.TEXTURE_PROG = ctx.load_program(vertex_shader=":resource:/shaders/texture_vert.glsl",
+                                              fragment_shader=":resource:/shaders/texture_frag.glsl")
+    SOUNDS.setup()
 

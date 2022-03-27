@@ -37,6 +37,7 @@ class ModulationRenderer:
         self.modulation_program['player_wave'] = player_wave
 
         self.modulation_program['shift'] = shift
+        self.modulation_program['wave_speed'] = Constants.WAVE_SPEED
 
         self.framebuffer.use()
         self.framebuffer.clear()

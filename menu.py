@@ -57,11 +57,16 @@ class MorseKnob(SettingManager):
         self.index = 2
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
         self.can_switch = False
+        TIMER.pause()
+        self.window.morse_manager.show = True
 
     def key_down(self):
         self.index = 3
         self.knob.angle = SettingManager.KNOB_ANGLES[self.index]
         self.can_switch = True
+        if self.window.power:
+            TIMER.un_pause()
+        self.window.morse_manager.show = False
 
 
 class PowerSwitch(SettingManager):
@@ -72,10 +77,12 @@ class PowerSwitch(SettingManager):
 
     def key_up(self):
         TIMER.un_pause()
+        self.window.power = True
         self.knob.texture = SettingManager.SWITCH_TEXTURE[0]
 
     def key_down(self):
         TIMER.pause()
+        self.window.power = False
         self.knob.texture = SettingManager.SWITCH_TEXTURE[1]
 
 
@@ -217,7 +224,9 @@ class HealthLights:
 
         self.health_range = 3
 
-        self.vignette = 0
+        self.vignette = arcade.Sprite(":resource:/graphics/Danger_Effect.png", scale=0.25,
+                                      center_x=Constants.SCREEN_SIZE[0]//2,
+                                      center_y=Constants.SCREEN_SIZE[1]//2)
 
     def change(self, new_index):
         last_percent = self.current_chances / HealthLights.HEALTH_ARRAY[self.chance_range]
@@ -241,6 +250,7 @@ class HealthLights:
         self.correct_lights()
 
     def damage(self):
+        SOUNDS.play_sound('hurt')
         self.current_chances -= 1
         self.chances[self.chance_range] -= 1
 
@@ -265,9 +275,7 @@ class HealthLights:
             self.light_2.alpha = 40
             self.current_light = self.light_3
             if not len(self.window.vignettes):
-                self.window.vignettes.append(arcade.Sprite(":resource:/graphics/Danger_Effect.png", scale=0.25,
-                                                           center_x=Constants.SCREEN_SIZE[0]//2,
-                                                           center_y=Constants.SCREEN_SIZE[1]//2))
+                self.window.vignettes.append(self.vignette)
         else:
             self.light_1.alpha = 40
             self.light_2.alpha = 40
@@ -321,7 +329,7 @@ class MenuManager:
                              center_x=34.5, center_y=37)
         self.menu_buttons.extend([sprite, case])
         self.power_switch = PowerSwitch(window, [self.morse_knob, None], sprite, case, self)
-        self.morse_knob.right_neighbor = self.power_switch
+        self.morse_knob.left_neighbor = self.power_switch
 
         # SPEED KNOB
         sprite = arcade.Sprite(":resource:/graphics/Knob_32px.png", scale=0.25,
@@ -376,7 +384,7 @@ class MenuManager:
         self.menu_buttons.extend([sprite, case])
         self.color_knob = ColorKnob(window, [self.effects_switch, self.morse_knob], sprite, case, self)
         self.effects_switch.right_neighbor = self.color_knob
-        self.morse_knob.left_neighbor = self.color_knob
+        self.morse_knob.right_neighbor = self.color_knob
 
         self.current = self.power_switch
         self.menu_buttons.remove(self.current.case)
